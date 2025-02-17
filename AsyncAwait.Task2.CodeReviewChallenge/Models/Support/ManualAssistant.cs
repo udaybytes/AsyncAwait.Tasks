@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
 using CloudServices.Interfaces;
 
@@ -20,8 +19,9 @@ public class ManualAssistant : IAssistant
         try
         {
             var t = _supportService.RegisterSupportRequestAsync(requestInfo);
+            await t;
             Console.WriteLine(t.Status); // this is for debugging purposes
-            Thread.Sleep(5000); // this is just to be sure that the request is registered
+            //Thread.Sleep(5000); // this is just to be sure that the request is registered
             return await _supportService.GetSupportInfoAsync(requestInfo)
                 .ConfigureAwait(false);
         }
