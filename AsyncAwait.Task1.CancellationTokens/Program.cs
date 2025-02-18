@@ -8,6 +8,8 @@
 */
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace AsyncAwait.Task1.CancellationTokens;
 
@@ -17,6 +19,7 @@ internal class Program
     /// The Main method should not be changed at all.
     /// </summary>
     /// <param name="args"></param>
+    private static CancellationTokenSource _cancellationTokenSource = null;
     private static void Main(string[] args)
     {
         Console.WriteLine("Mentoring program L2. Async/await.V1. Task 1");
@@ -27,11 +30,16 @@ internal class Program
         Console.WriteLine("Enter N: ");
 
         var input = Console.ReadLine();
+
         while (input.Trim().ToUpper() != "Q")
         {
+            //Cancel any ongoing task before starting a new one
+            _cancellationTokenSource?.Cancel();
+
+            _cancellationTokenSource = new CancellationTokenSource();
             if (int.TryParse(input, out var n))
             {
-                CalculateSum(n);
+                 CalculateSumAsync(n, _cancellationTokenSource.Token);
             }
             else
             {
@@ -46,16 +54,23 @@ internal class Program
         Console.ReadLine();
     }
 
-    private static void CalculateSum(int n)
+    private static async Task CalculateSumAsync(int n, CancellationToken cancellationToken)
     {
-        // todo: make calculation asynchronous
-        var sum = Calculator.Calculate(n);
-        Console.WriteLine($"Sum for {n} = {sum}.");
-        Console.WriteLine();
-        Console.WriteLine("Enter N: ");
-        // todo: add code to process cancellation and uncomment this line    
-        // Console.WriteLine($"Sum for {n} cancelled...");
-
-        Console.WriteLine($"The task for {n} started... Enter N to cancel the request:");
+        try
+        {
+            Console.WriteLine($"The task for {n} started... Enter N to cancel the request:");
+            long sum = await Calculator.Calculate(n, cancellationToken);
+            Console.WriteLine($"Sum for {n} = {sum}.");
+            Console.WriteLine();
+            Console.WriteLine("Enter N: ");
+        }
+        catch (OperationCanceledException)
+        {
+            Console.WriteLine($"Sum for {n} cancelled...");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred: {ex.Message}");
+        }
     }
 }
